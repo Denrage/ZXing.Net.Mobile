@@ -142,5 +142,10 @@ namespace ZXing.Mobile.CameraAccess
                 return;
             }
         }
+
+        public void SetZoom(float zoomLevel)
+        {
+            cameraController.SetZoom(zoomLevel);
+        }
     }
 }

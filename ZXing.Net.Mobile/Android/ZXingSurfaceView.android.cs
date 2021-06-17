@@ -7,16 +7,18 @@ using ZXing.Mobile.CameraAccess;
 using ZXing.Net.Mobile.Android;
 using System.Threading.Tasks;
 using System.Threading;
+using Java.Interop;
 
 namespace ZXing.Mobile
 {
-    public class ZXingSurfaceView : SurfaceView, ISurfaceHolderCallback, IScannerView, IScannerSessionHost
+    public class ZXingSurfaceView : SurfaceView, ISurfaceHolderCallback, IScannerView, IScannerSessionHost, ScaleGestureDetector.IOnScaleGestureListener
     {
         public ZXingSurfaceView(Context context, MobileBarcodeScanningOptions options)
             : base(context)
         {
             ScanningOptions = options ?? new MobileBarcodeScanningOptions();
             Init();
+            scaleGestureDetector = new ScaleGestureDetector(context, this);
         }
 
         protected ZXingSurfaceView(IntPtr javaReference, JniHandleOwnership transfer)
@@ -84,6 +86,8 @@ namespace ZXing.Mobile
                     break;
             }
 
+            this.scaleGestureDetector.OnTouchEvent(e);
+
             return r;
         }
 
@@ -102,8 +106,8 @@ namespace ZXing.Mobile
 
                 ScanningOptions = options ?? MobileBarcodeScanningOptions.Default;
 
-                cameraAnalyzer.BarcodeFound = (result) =>
-                    scanResultCallback?.Invoke(result);
+                //cameraAnalyzer.BarcodeFound = (result) =>
+                //    scanResultCallback?.Invoke(result);
                 cameraAnalyzer.ResumeAnalysis();
             });
         }
@@ -137,6 +141,7 @@ namespace ZXing.Mobile
         CameraAnalyzer cameraAnalyzer;
         bool surfaceCreated;
         ManualResetEventSlim surfaceCreatedResetEvent = new ManualResetEventSlim(false);
+        private ScaleGestureDetector scaleGestureDetector;
 
         public bool HasTorch => cameraAnalyzer.Torch.IsSupported;
 
@@ -165,6 +170,22 @@ namespace ZXing.Mobile
             //only refresh the camera if the surface has already been created. Fixed #569
             if (surfaceCreated)
                 cameraAnalyzer.RefreshCamera();
+        }
+
+        public bool OnScale(ScaleGestureDetector detector)
+        {
+            this.cameraAnalyzer.SetZoom(detector.ScaleFactor);
+            return true;
+        }
+
+        public bool OnScaleBegin(ScaleGestureDetector detector)
+        {
+            return true;
+        }
+
+        public void OnScaleEnd(ScaleGestureDetector detector)
+        {
+            // NOP
         }
     }
 }

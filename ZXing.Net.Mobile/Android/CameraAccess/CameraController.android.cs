@@ -167,6 +167,111 @@ namespace ZXing.Mobile.CameraAccess
             }
         }
 
+        public float ZoomLevel { get; private set; } = 1.0f;
+
+        public void SetZoom(float zoomLevel)
+        {
+            var zoomRect = GetZoomRect(zoomLevel);
+            if (zoomRect != null)
+            {
+                try
+                {
+                    //you can try to add the synchronized object here
+                    previewBuilder.Set(CaptureRequest.ScalerCropRegion, zoomRect);
+                    UpdatePreview();
+                }
+                catch (System.Exception ex)
+                {
+                    Log.Debug(MobileBarcodeScanner.TAG, "Error updating preview: " + ex);
+                }
+
+                this.ZoomLevel = zoomLevel;
+            }
+        }
+
+        Rect defaultZoomRectangle;
+
+        Rect GetZoomRect(float zoomLevel)
+        {
+            try
+            {
+                var characteristics = cameraManager.GetCameraCharacteristics(CameraId);
+                var maxZoom = ((float)characteristics.Get(CameraCharacteristics.ScalerAvailableMaxDigitalZoom));
+                var currentRectangle = (Rect)characteristics.Get(CameraCharacteristics.SensorInfoActiveArraySize);
+
+                if (defaultZoomRectangle is null)
+                {
+                    defaultZoomRectangle = currentRectangle;
+                }
+
+                // Invert zoom to get a percentage
+                zoomLevel = 1 - zoomLevel;
+
+                if (zoomLevel == 0)
+                {
+                    return defaultZoomRectangle;
+                }
+
+                var percentageWidth = defaultZoomRectangle.Width() * zoomLevel;
+                var percentageHeight = defaultZoomRectangle.Height() * zoomLevel;
+                var top = (int)(percentageHeight / 2);
+                var left = (int)(percentageWidth / 2);
+                var bottom = (int)(defaultZoomRectangle.Height() - percentageHeight);
+                var right = (int)(defaultZoomRectangle.Width() - percentageWidth);
+
+                return new Rect(left, top, right, bottom);
+            }
+            catch (System.Exception ex)
+            {
+                Log.Debug(MobileBarcodeScanner.TAG, "Error determining zoom rectangle: " + ex);
+                return null;
+            }
+            try
+            {
+                var characteristics = cameraManager.GetCameraCharacteristics(CameraId);
+                var maxZoom = ((float)characteristics.Get(CameraCharacteristics.ScalerAvailableMaxDigitalZoom));
+                var currentRectangle = (Rect)characteristics.Get(CameraCharacteristics.SensorInfoActiveArraySize);
+                if (zoomLevel <= maxZoom && zoomLevel > 1)
+                {
+                    var minWidth = (int)(currentRectangle.Width() / maxZoom);
+                    var minHeight = (int)(currentRectangle.Height() / maxZoom);
+                    var differenceWidth = currentRectangle.Width() - minWidth;
+                    var differenceHeight = currentRectangle.Height() - minHeight;
+                    var cropWidth = differenceWidth / 100 * (int)zoomLevel;
+                    var cropHeight = differenceHeight / 100 * (int)zoomLevel;
+
+                    cropWidth -= cropWidth & 3;
+                    cropHeight -= cropHeight & 3;
+
+                    return new Rect(cropWidth, cropHeight, currentRectangle.Width() - cropWidth, currentRectangle.Height() - cropHeight);
+                }
+                else if (zoomLevel == 0)
+                {
+                    return new Rect(0, 0, currentRectangle.Width(), currentRectangle.Height());
+                }
+                return null;
+            }
+            catch (System.Exception ex)
+            {
+                Log.Debug(MobileBarcodeScanner.TAG, "Error determining zoom rectangle: " + ex);
+                return null;
+            }
+        }
+
+        public float GetMaxZoom()
+        {
+            try
+            {
+                return ((float)cameraManager.GetCameraCharacteristics(CameraId)
+                    .Get(CameraCharacteristics.ScalerAvailableMaxDigitalZoom)) * 10;
+            }
+            catch (System.Exception ex)
+            {
+                Log.Debug(MobileBarcodeScanner.TAG, "Error getting max zoom: " + ex);
+                return -1;
+            }
+        }
+
         void SetUpCameraOutputs()
         {
             try
