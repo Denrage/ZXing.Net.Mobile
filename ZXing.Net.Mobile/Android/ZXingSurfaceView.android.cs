@@ -8,6 +8,7 @@ using ZXing.Net.Mobile.Android;
 using System.Threading.Tasks;
 using System.Threading;
 using Java.Interop;
+using System.Diagnostics;
 
 namespace ZXing.Mobile
 {
@@ -75,6 +76,11 @@ namespace ZXing.Mobile
         {
             var r = base.OnTouchEvent(e);
 
+            if (e.PointerCount == 2)
+            {
+                return this.scaleGestureDetector.OnTouchEvent(e);
+            }
+
             switch (e.Action)
             {
                 case MotionEventActions.Down:
@@ -85,8 +91,6 @@ namespace ZXing.Mobile
                     AutoFocus((int)touchX, (int)touchY);
                     break;
             }
-
-            this.scaleGestureDetector.OnTouchEvent(e);
 
             return r;
         }
@@ -172,20 +176,60 @@ namespace ZXing.Mobile
                 cameraAnalyzer.RefreshCamera();
         }
 
+        // [MAGIC VALUE] Values below lets the camera jump back to "normal"
+        readonly float minZoomLevel = 0.5f;
+        // Camera defaults at 1f. MaxZoomLevel returned 100f on test device.
+        // Probably since a Wide-angle lens was present. Makes no sense to go above "normal".
+        readonly float maxZoomLevel = 1f;
+        // [MAGIC VALUE] To prevent quick jumps in zoom level, this offset exists. It was determined by what felt the best
+        readonly float zoomJumpPreventionOffset = 0.25f;
+        float zoomStartOffset = 0f;
+
+        float CalculateZoomLevel(float scaleFactor)
+        {
+            var currentZoomLevel = cameraAnalyzer.CurrentZoomLevel();
+            var adjustedScaledFactor = 1f - scaleFactor;
+            var preventJump = adjustedScaledFactor < 0f ? -adjustedScaledFactor > zoomJumpPreventionOffset : adjustedScaledFactor > zoomJumpPreventionOffset;
+
+            if (preventJump)
+                return currentZoomLevel;
+
+            // This Offset is used to prevent accidental zooms. The Start Value can be set through options
+            if (zoomStartOffset > 0f)
+            {
+                zoomStartOffset += (adjustedScaledFactor > 0f) ? -adjustedScaledFactor : adjustedScaledFactor;
+                return currentZoomLevel;
+            }
+
+            var newZoomLevel = currentZoomLevel + (adjustedScaledFactor * ScanningOptions.ZoomSpeedModifier);
+
+            if (newZoomLevel < minZoomLevel)
+                newZoomLevel = minZoomLevel;
+            else if (newZoomLevel > maxZoomLevel)
+                newZoomLevel = maxZoomLevel;
+
+            return newZoomLevel;
+        }
+
         public bool OnScale(ScaleGestureDetector detector)
         {
-            this.cameraAnalyzer.SetZoom(detector.ScaleFactor);
+            var zoomLevel = CalculateZoomLevel(detector.ScaleFactor);
+            cameraAnalyzer.SetZoom(zoomLevel);
+
             return true;
         }
 
         public bool OnScaleBegin(ScaleGestureDetector detector)
         {
+            zoomStartOffset = ScanningOptions.ZoomStartOffset;
+            cameraAnalyzer.StartZoom();
+            cameraAnalyzer.SetZoom(cameraAnalyzer.CurrentZoomLevel());
             return true;
         }
 
         public void OnScaleEnd(ScaleGestureDetector detector)
         {
-            // NOP
+            cameraAnalyzer.StopZoom();
         }
     }
 }

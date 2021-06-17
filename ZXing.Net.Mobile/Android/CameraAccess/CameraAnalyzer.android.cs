@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Android.Content;
@@ -17,6 +18,7 @@ namespace ZXing.Mobile.CameraAccess
         Task processingTask;
         DateTime lastPreviewAnalysis = DateTime.UtcNow;
         bool wasScanned;
+        bool zooming = false;
         readonly IScannerSessionHost scannerHost;
         BarcodeReaderGeneric barcodeReader;
 
@@ -58,10 +60,18 @@ namespace ZXing.Mobile.CameraAccess
         }
 
         public void AutoFocus()
-            => cameraController.AutoFocus();
+        {
+            // AutoFocus gets deativated when zooming to reduce flickering in ScaleFactor
+            if (!zooming)
+                cameraController.AutoFocus();
+        }
 
         public void AutoFocus(int x, int y)
-            => cameraController.AutoFocus(x, y);
+        {
+            // AutoFocus gets deativated when zooming to reduce flickering in ScaleFactor
+            if (!zooming)
+                cameraController.AutoFocus(x, y);
+        }
 
         public void RefreshCamera()
         {
@@ -141,6 +151,20 @@ namespace ZXing.Mobile.CameraAccess
                 BarcodeFound?.Invoke(result);
                 return;
             }
+        }
+
+        public float GetMaxZoom() => this.cameraController.GetMaxZoom();
+
+        public float CurrentZoomLevel() => this.cameraController.ZoomLevel;
+
+        public void StartZoom()
+        {
+            zooming = true;
+        }
+
+        public void StopZoom()
+        {
+            zooming = false;
         }
 
         public void SetZoom(float zoomLevel)

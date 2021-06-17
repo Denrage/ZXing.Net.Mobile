@@ -1,121 +1,124 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using ZXing;
 
 namespace ZXing.Mobile
 {
-	public class MobileBarcodeScanningOptions
-	{
-		/// <summary>
-		/// Camera resolution selector delegate, must return the selected Resolution from the list of available resolutions
-		/// </summary>
-		public delegate CameraResolution CameraResolutionSelectorDelegate(List<CameraResolution> availableResolutions);
+    public class MobileBarcodeScanningOptions
+    {
+        /// <summary>
+        /// Camera resolution selector delegate, must return the selected Resolution from the list of available resolutions
+        /// </summary>
+        public delegate CameraResolution CameraResolutionSelectorDelegate(List<CameraResolution> availableResolutions);
 
-		public MobileBarcodeScanningOptions()
-		{
-			PossibleFormats = new List<BarcodeFormat>();
-			//this.AutoRotate = true;
-			DelayBetweenAnalyzingFrames = 150;
-			InitialDelayBeforeAnalyzingFrames = 300;
-			DelayBetweenContinuousScans = 1000;
-			UseNativeScanning = false;
-		}
+        public MobileBarcodeScanningOptions()
+        {
+            PossibleFormats = new List<BarcodeFormat>();
+            //this.AutoRotate = true;
+            DelayBetweenAnalyzingFrames = 150;
+            InitialDelayBeforeAnalyzingFrames = 300;
+            DelayBetweenContinuousScans = 1000;
+            UseNativeScanning = false;
+            ZoomStartOffset = 0.015f;
+            ZoomSpeedModifier = 1f;
+        }
 
-		public CameraResolutionSelectorDelegate CameraResolutionSelector { get; set; }
+        public CameraResolutionSelectorDelegate CameraResolutionSelector { get; set; }
 
-		public IEnumerable<BarcodeFormat> PossibleFormats { get; set; }
+        public IEnumerable<BarcodeFormat> PossibleFormats { get; set; }
 
-		public bool? TryHarder { get; set; }
+        public bool? TryHarder { get; set; }
 
-		public bool? PureBarcode { get; set; }
+        public bool? PureBarcode { get; set; }
 
-		public bool? AutoRotate { get; set; }
+        public bool? AutoRotate { get; set; }
 
-		public bool? UseCode39ExtendedMode { get; set; }
+        public bool? UseCode39ExtendedMode { get; set; }
 
-		public string CharacterSet { get; set; }
+        public string CharacterSet { get; set; }
 
-		public bool? TryInverted { get; set; }
+        public bool? TryInverted { get; set; }
 
-		public bool? UseFrontCameraIfAvailable { get; set; }
+        public bool? UseFrontCameraIfAvailable { get; set; }
 
-		public bool? AssumeGS1 { get; set; }
+        public bool? AssumeGS1 { get; set; }
 
 
-		public bool DisableAutofocus { get; set; }
+        public bool DisableAutofocus { get; set; }
 
-		public bool UseNativeScanning { get; set; }
+        public bool UseNativeScanning { get; set; }
 
-		public int DelayBetweenContinuousScans { get; set; }
+        public int DelayBetweenContinuousScans { get; set; }
 
-		public int DelayBetweenAnalyzingFrames { get; set; }
-		public int InitialDelayBeforeAnalyzingFrames { get; set; }
+        public int DelayBetweenAnalyzingFrames { get; set; }
+        public int InitialDelayBeforeAnalyzingFrames { get; set; }
 
-		public static MobileBarcodeScanningOptions Default
-		{
-			get { return new MobileBarcodeScanningOptions(); }
-		}
+        public float ZoomStartOffset { get; set; }
 
-		public BarcodeReaderGeneric BuildBarcodeReader()
-		{
-			var reader = new BarcodeReaderGeneric();
-			if (TryHarder.HasValue)
-				reader.Options.TryHarder = TryHarder.Value;
-			if (PureBarcode.HasValue)
-				reader.Options.PureBarcode = PureBarcode.Value;
-			if (AutoRotate.HasValue)
-				reader.AutoRotate = AutoRotate.Value;
-			if (UseCode39ExtendedMode.HasValue)
-				reader.Options.UseCode39ExtendedMode = UseCode39ExtendedMode.Value;
-			if (!string.IsNullOrEmpty(CharacterSet))
-				reader.Options.CharacterSet = CharacterSet;
-			if (TryInverted.HasValue)
-				reader.TryInverted = TryInverted.Value;
-			if (AssumeGS1.HasValue)
-				reader.Options.AssumeGS1 = AssumeGS1.Value;
+        public float ZoomSpeedModifier { get; set; }
 
-			if (PossibleFormats?.Any() ?? false)
-			{
-				reader.Options.PossibleFormats = new List<BarcodeFormat>();
+        public static MobileBarcodeScanningOptions Default
+        {
+            get { return new MobileBarcodeScanningOptions(); }
+        }
 
-				foreach (var pf in PossibleFormats)
-					reader.Options.PossibleFormats.Add(pf);
-			}
+        public BarcodeReaderGeneric BuildBarcodeReader()
+        {
+            var reader = new BarcodeReaderGeneric();
+            if (TryHarder.HasValue)
+                reader.Options.TryHarder = TryHarder.Value;
+            if (PureBarcode.HasValue)
+                reader.Options.PureBarcode = PureBarcode.Value;
+            if (AutoRotate.HasValue)
+                reader.AutoRotate = AutoRotate.Value;
+            if (UseCode39ExtendedMode.HasValue)
+                reader.Options.UseCode39ExtendedMode = UseCode39ExtendedMode.Value;
+            if (!string.IsNullOrEmpty(CharacterSet))
+                reader.Options.CharacterSet = CharacterSet;
+            if (TryInverted.HasValue)
+                reader.TryInverted = TryInverted.Value;
+            if (AssumeGS1.HasValue)
+                reader.Options.AssumeGS1 = AssumeGS1.Value;
 
-			return reader;
-		}
+            if (PossibleFormats?.Any() ?? false)
+            {
+                reader.Options.PossibleFormats = new List<BarcodeFormat>();
 
-		public MultiFormatReader BuildMultiFormatReader()
-		{
-			var reader = new MultiFormatReader();
+                foreach (var pf in PossibleFormats)
+                    reader.Options.PossibleFormats.Add(pf);
+            }
 
-			var hints = new Dictionary<DecodeHintType, object>();
+            return reader;
+        }
 
-			if (TryHarder.HasValue && TryHarder.Value)
-				hints.Add(DecodeHintType.TRY_HARDER, TryHarder.Value);
-			if (PureBarcode.HasValue && PureBarcode.Value)
-				hints.Add(DecodeHintType.PURE_BARCODE, PureBarcode.Value);
+        public MultiFormatReader BuildMultiFormatReader()
+        {
+            var reader = new MultiFormatReader();
 
-			if (PossibleFormats?.Any() ?? false)
-				hints.Add(DecodeHintType.POSSIBLE_FORMATS, PossibleFormats);
+            var hints = new Dictionary<DecodeHintType, object>();
 
-			reader.Hints = hints;
+            if (TryHarder.HasValue && TryHarder.Value)
+                hints.Add(DecodeHintType.TRY_HARDER, TryHarder.Value);
+            if (PureBarcode.HasValue && PureBarcode.Value)
+                hints.Add(DecodeHintType.PURE_BARCODE, PureBarcode.Value);
 
-			return reader;
-		}
+            if (PossibleFormats?.Any() ?? false)
+                hints.Add(DecodeHintType.POSSIBLE_FORMATS, PossibleFormats);
 
-		public CameraResolution GetResolution(List<CameraResolution> availableResolutions)
-		{
-			CameraResolution r = null;
+            reader.Hints = hints;
 
-			var dg = CameraResolutionSelector;
+            return reader;
+        }
 
-			if (dg != null)
-				r = dg(availableResolutions);
+        public CameraResolution GetResolution(List<CameraResolution> availableResolutions)
+        {
+            CameraResolution r = null;
 
-			return r;
-		}
-	}
+            var dg = CameraResolutionSelector;
+
+            if (dg != null)
+                r = dg(availableResolutions);
+
+            return r;
+        }
+    }
 }
