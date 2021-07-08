@@ -56,7 +56,7 @@ namespace ZXing.Net.Mobile.Forms
                 HorizontalOptions = LayoutOptions.FillAndExpand,
             };
             grid.Children.Add(zxing);
-            //grid.Children.Add(Overlay);
+            grid.Children.Add(Overlay);
 
             // The root page of your application
             Content = grid;

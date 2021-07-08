@@ -110,8 +110,8 @@ namespace ZXing.Mobile
 
                 ScanningOptions = options ?? MobileBarcodeScanningOptions.Default;
 
-                //cameraAnalyzer.BarcodeFound = (result) =>
-                //    scanResultCallback?.Invoke(result);
+                cameraAnalyzer.BarcodeFound = (result) =>
+                    scanResultCallback?.Invoke(result);
                 cameraAnalyzer.ResumeAnalysis();
             });
         }
