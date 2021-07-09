@@ -244,36 +244,6 @@ namespace ZXing.Mobile.CameraAccess
                 Log.Debug(MobileBarcodeScanner.TAG, "Error determining zoom rectangle: " + ex);
                 return null;
             }
-            try
-            {
-                var characteristics = cameraManager.GetCameraCharacteristics(CameraId);
-                var maxZoom = ((float)characteristics.Get(CameraCharacteristics.ScalerAvailableMaxDigitalZoom));
-                var currentRectangle = (Rect)characteristics.Get(CameraCharacteristics.SensorInfoActiveArraySize);
-                if (zoomLevel <= maxZoom && zoomLevel > 1)
-                {
-                    var minWidth = (int)(currentRectangle.Width() / maxZoom);
-                    var minHeight = (int)(currentRectangle.Height() / maxZoom);
-                    var differenceWidth = currentRectangle.Width() - minWidth;
-                    var differenceHeight = currentRectangle.Height() - minHeight;
-                    var cropWidth = differenceWidth / 100 * (int)zoomLevel;
-                    var cropHeight = differenceHeight / 100 * (int)zoomLevel;
-
-                    cropWidth -= cropWidth & 3;
-                    cropHeight -= cropHeight & 3;
-
-                    return new Rect(cropWidth, cropHeight, currentRectangle.Width() - cropWidth, currentRectangle.Height() - cropHeight);
-                }
-                else if (zoomLevel == 0)
-                {
-                    return new Rect(0, 0, currentRectangle.Width(), currentRectangle.Height());
-                }
-                return null;
-            }
-            catch (System.Exception ex)
-            {
-                Log.Debug(MobileBarcodeScanner.TAG, "Error determining zoom rectangle: " + ex);
-                return null;
-            }
         }
 
         public float GetMaxZoom()
