@@ -136,23 +136,30 @@ namespace ZXing.Mobile.CameraAccess
                 // Since FocusAreas only really work with FocusModeAuto set
                 if (useCoordinates && supportedFocusModes.Contains(ControlAFMode.Auto))
                 {
-                    // Let's give the touched area a 20 x 20 minimum size rect to focus on
-                    // So we'll offset -10 from the center of the touch and then
-                    // make a rect of 20 to give an area to focus on based on the center of the touch
-                    x = x - 10;
-                    y = y - 10;
+                    // Let's give the touched area a 30 x 30 minimum size rect to focus on
+                    // So we'll offset -15 from the center of the touch and then
+                    // make a rect of 25 to give an area to focus on based on the center of the touch.
+                    // The Auto Exposre gets a smaller by 5, (25x25) region to have more play area for 
+                    // better results. Especially for some samsung devices.
+                    var offset = 10;
+                    var afRectMaxOffset = offset * 2;
+                    var aeRectMaxOffset = 5;
+                    x = x - offset;
+                    y = y - offset;
 
                     // Explicitly set FocusModeAuto since Focus areas only work with this setting
                     previewBuilder.Set(CaptureRequest.ControlAfMode, (int)ControlAFMode.Auto);
                     // Add our focus area
                     previewBuilder.Set(CaptureRequest.ControlAfRegions, new MeteringRectangle[]
                     {
-                        new MeteringRectangle(x, y, x + 20, y + 20, 1000)
+                        new MeteringRectangle(x, y, x + afRectMaxOffset, y + afRectMaxOffset, 1000)
                     });
 
                     previewBuilder.Set(CaptureRequest.ControlAeRegions, new MeteringRectangle[]
                     {
-                        new MeteringRectangle(x, y, x + 20, y + 20, 1000)
+                        new MeteringRectangle(x + aeRectMaxOffset, y + aeRectMaxOffset,
+                        x + (afRectMaxOffset - aeRectMaxOffset), y + (afRectMaxOffset - aeRectMaxOffset),
+                        1000)
                     });
                 }
 
@@ -160,6 +167,8 @@ namespace ZXing.Mobile.CameraAccess
                 previewBuilder.Set(CaptureRequest.ControlAfTrigger, (int)ControlAFTrigger.Start);
 
                 UpdatePreview();
+
+                previewBuilder.Set(CaptureRequest.ControlAfTrigger, (int)ControlAFTrigger.Cancel);
             }
             catch (System.Exception ex)
             {
@@ -176,9 +185,12 @@ namespace ZXing.Mobile.CameraAccess
             {
                 try
                 {
-                    //you can try to add the synchronized object here
+                    // you can try to add the synchronized object here
                     previewBuilder.Set(CaptureRequest.ScalerCropRegion, zoomRect);
                     UpdatePreview();
+                    
+                    // Stop spamming autofocus while set zoom is called
+                    previewBuilder.Set(CaptureRequest.ControlAfTrigger, (int)ControlAFTrigger.Cancel);
                 }
                 catch (System.Exception ex)
                 {
