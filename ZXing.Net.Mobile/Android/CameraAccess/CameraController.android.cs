@@ -131,6 +131,11 @@ namespace ZXing.Mobile.CameraAccess
 
                 Log.Debug(MobileBarcodeScanner.TAG, "AutoFocus Requested");
 
+                if (previewBuilder == null)
+                {
+                    Log.Debug(MobileBarcodeScanner.TAG, "PreviewBuilder is not set, aborting AutoFocus Request");
+                    return;
+                }
                 // If we want to use coordinates
                 // Also only if our camera supports Auto focus mode
                 // Since FocusAreas only really work with FocusModeAuto set
