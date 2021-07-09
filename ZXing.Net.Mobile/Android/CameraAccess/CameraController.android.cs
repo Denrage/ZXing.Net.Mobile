@@ -136,6 +136,7 @@ namespace ZXing.Mobile.CameraAccess
                     Log.Debug(MobileBarcodeScanner.TAG, "PreviewBuilder is not set, aborting AutoFocus Request");
                     return;
                 }
+
                 // If we want to use coordinates
                 // Also only if our camera supports Auto focus mode
                 // Since FocusAreas only really work with FocusModeAuto set
@@ -479,7 +480,7 @@ namespace ZXing.Mobile.CameraAccess
 
         Size GetOptimalSize(IList<Size> sizes, int width, int height)
         {
-            const int minimumSize = 1000;
+            const int minimumSize = 576;
             if (sizes is null) return null;
 
             var aspectRatio = (double)width / (double)height;
