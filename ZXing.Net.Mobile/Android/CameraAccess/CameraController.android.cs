@@ -422,6 +422,7 @@ namespace ZXing.Mobile.CameraAccess
                         OnConfiguredAction = session =>
                         {
                             previewSession = session;
+                            SetZoom(this.ZoomLevel);
                             UpdatePreview();
                         }
                     },
