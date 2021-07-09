@@ -18,7 +18,7 @@ namespace ZXing.Mobile
             InitialDelayBeforeAnalyzingFrames = 300;
             DelayBetweenContinuousScans = 1000;
             UseNativeScanning = false;
-            ZoomStartOffset = 0.015f;
+            ZoomStartOffset = 0.0125f;
             ZoomSpeedModifier = 1f;
         }
 
