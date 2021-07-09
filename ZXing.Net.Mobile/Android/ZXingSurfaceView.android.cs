@@ -176,13 +176,13 @@ namespace ZXing.Mobile
                 cameraAnalyzer.RefreshCamera();
         }
 
-        // [MAGIC VALUE] Values below lets the camera jump back to "normal"
-        readonly float minZoomLevel = 0.5f;
+        // [MAGIC VALUE] Values below lets the camera jump back to "normal" or just crash the camera untill device is restarted
+        readonly float minZoomLevel = 0.45f;
         // Camera defaults at 1f. MaxZoomLevel returned 100f on test device.
         // Probably since a Wide-angle lens was present. Makes no sense to go above "normal".
         readonly float maxZoomLevel = 1f;
         // [MAGIC VALUE] To prevent quick jumps in zoom level, this offset exists. It was determined by what felt the best
-        readonly float zoomJumpPreventionOffset = 0.25f;
+        readonly float zoomJumpPreventionOffset = 0.245f;
         float zoomStartOffset = 0f;
 
         float CalculateZoomLevel(float scaleFactor)
